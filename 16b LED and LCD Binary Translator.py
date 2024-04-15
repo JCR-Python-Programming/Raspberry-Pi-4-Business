@@ -1,0 +1,174 @@
+# 16b LED and LCD Binary Translator Python program example:
+
+# Created by Joseph C. Richardson, GitHub.com
+
+# Note: be mindful while working with
+# electroics. There are mistakes that
+# cannot be corrected should you ignore
+# any basic electronics rules. Electronics
+# demands basic math skills and knowledge
+# of electronics components alike.
+
+# Items needed are as follows:
+
+# Raspberry Pi 4 = 1
+# breadboard = 1 or more depending
+# LCD display = 1
+# 74HC595 shift register = 2
+# LEDs = 16
+# 220 ohm resistor = 16
+# jumper wire = 38 or more +2 for the Rasp pi 4 fan
+
+# Note: use two other jumper wires for
+# the Raspberry Pi 4 fan, while in use/
+# operation.
+
+# 16b Binary Translator Python program example:
+
+# This Raspberry Pi 4 Python program allows
+# users to input decimal numbers, then
+# translate them into binary, hexadecimal
+# and decimal values using two 74HC595
+# shift registers.
+
+# We will use the breadboard method:
+
+# GPIO.setmode(GPIO.BOARD)
+
+# This method is for the GPIO pinouts
+# not the GPIO numbers, such as BCM
+
+# You can also use the Broadcom SOC
+# Channel method if you prefer:
+
+# GPIO.setmode(GPIO.BCM)
+# This allows GPIO numbers, not GPIO
+# pinouts, such as the breadboard
+# method illustrates in our Python
+# program example:
+
+# import functions:
+
+import RPi.GPIO as GPIO,drivers
+from time import sleep as wait
+
+GPIO.setmode(GPIO.BOARD) # breadboard method
+GPIO.setwarnings(False) # disable setwarnings
+display=drivers.Lcd() # enable the LCD display
+
+display.lcd_clear() # clear the LCD screen
+
+# Create variables for the latch, data bit and the clock.
+
+# You can rename all these variables to any names you wish,
+# but keep in mind that you must also rename any variables
+# in your program as well. Click the Find and Replace command
+# on the IDLE menu to make any renaming changes faster to cover
+# any variables you want to rename. However, you should stick
+# to meaningful names, so other programmers can learn and
+# understand what's happening throughout the program's
+# execution/run.
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+# Note: Python executes its programs from the top, downward.
+# You must place these variables in this correct order as shown.
+# These pinout values won't execute right if you don't.
+
+latch=33
+data_bit=35
+clock=31
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+byte_range=65536 # from 0 to 65535
+
+control_shift=data_bit,latch,clock
+
+stop_program_message='''
+print('Stop program Execution/run:')
+print('cleanup/release all GPIO pinouts \
+to LOW state.')'''
+
+message='16B TRANSLATOR','ENTER 16B NUMBER:'
+value_error='BYTE VALUES ONLY','PLEASE: 0-65535'
+index_error='VALUE EXCEEDS','16B RANGE 0-65535'
+
+for i in control_shift:GPIO.setup(i,GPIO.OUT)
+
+# Create two functions called
+# clear_all_data_bits and shift_all_data_bits.
+
+def clear_all_data_bits():
+    
+    for i in range(16):
+        GPIO.output(latch,0)
+        GPIO.output(data_bit,0) # set all 16 data bits to 0/off
+        GPIO.output(clock,1)
+        GPIO.output(latch,1)
+        GPIO.output(clock,0)
+        
+clear_all_data_bits() # call the function
+        
+def shift_all_data_bits():
+    
+    clear_all_data_bits() # call the function
+    
+    for i in range(byte,-1,-1): # reverse forloop and step value -1            
+        bin=f'{byte:b}'
+        for j in range(16):                
+            GPIO.output(latch,0)
+            GPIO.output(data_bit,int(bin[j]))
+            GPIO.output(clock,1)
+            GPIO.output(latch,1)
+            GPIO.output(clock,0)
+            
+while True:
+    try:
+        while True:
+            try:
+                display.lcd_clear()
+                display.lcd_display_string(
+                message[0],1)
+                byte=int(input(display.
+                lcd_display_string(message[1],2)))
+                if byte>=byte_range:
+                    display.lcd_clear()
+                    
+                    for i in range(2):
+                        display.lcd_display_string(
+                        index_error[i],1+i)
+                    wait(2)
+                    break
+                
+                display.lcd_clear()
+                display.lcd_display_string(
+                f'{byte:b}',1)
+                display.lcd_display_string(
+                f'H: {byte:X} D: {byte:d}',2)
+                
+                shift_all_data_bits() # call the function
+                
+            except ValueError:
+                display.lcd_clear()
+                for i in range(2):
+                    display.lcd_display_string(
+                    value_error[i],1+i)            
+                wait(2)
+                break
+            
+            except IndexError:
+                pass
+            wait(3)
+            
+            clear_all_data_bits() # call the function
+            
+# Note: it is recommended that you setup
+# a KeyboardInterrupt handler to force
+# the GPIO pins to return to a low state/off.
+
+    except KeyboardInterrupt:
+        exec(stop_program_message)
+        
+        clear_all_data_bits() # call the function
+            
+        display.lcd_clear()
+        display.lcd_backlight(0)
+        GPIO.cleanup() # GPIO.cleanup() sets all GPIO pins to LOW/OFF
+        break
