@@ -20,3 +20,5 @@ to create your very own LED Binary Counter and LED Binary
 Translator Python programs.
 
 PS: I sure hope you have awesome fun with these...
+
+I am almost a complete Walking Human Computer Science Research Laboratory Machine on Two Legs. 😁
